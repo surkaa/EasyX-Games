@@ -2,6 +2,7 @@
 #include<iostream>
 #include<string>
 #include<vector>
+#define PI 3.14159265358979323846
 
 #pragma comment(lib, "MSIMG32.LIB")
 
@@ -194,6 +195,8 @@ private:
 class Bullet
 {
 public:
+	POINT loc = { 0, 0 };
+public:
 	Bullet() = default;
 	~Bullet() = default;
 	void Draw() const
@@ -202,14 +205,9 @@ public:
 		setfillcolor(RGB(200, 75, 10));
 		fillcircle(loc.x, loc.y, RADIUS);
 	}
-	const POINT& GetPosition() const
-	{
-		return loc;
-	}
 
 private:
 	const int RADIUS = 10;
-	POINT loc = { 0, 0 };
 };
 
 class Enemy
@@ -254,10 +252,10 @@ public:
 		delete anim_left;
 		delete anim_right;
 	}
-	bool CheckBulletCollision(const Bullet& bullet)
+	bool CheckBulletCollision(const Bullet& b)
 	{
-		const POINT& b = bullet.GetPosition();
-		return b.x >= loc.x && b.x <= loc.x + FRAME_WIDTH && b.y >= loc.y && b.y <= loc.y + FRAME_HEIGHT;
+		return b.loc.x >= loc.x && b.loc.x <= loc.x + FRAME_WIDTH 
+			&& b.loc.y >= loc.y && b.loc.y <= loc.y + FRAME_HEIGHT;
 	}
 	bool CheckPlayerCollision(const Player& player)
 	{
@@ -296,7 +294,14 @@ public:
 			anim_right->play(loc, delta);
 		}
 	}
-
+	void Hurt()
+	{
+		alive = false;
+	}
+	bool CheckAlive()
+	{
+		return alive;
+	}
 private:
 	// 敌人移速
 	const int SPEED = 2;
@@ -313,6 +318,7 @@ private:
 	bool is_facing_left = false;
 	bool is_move_left = false;
 	bool is_move_right = false;
+	bool alive = true;
 };
 
 // 绘制提示信息(FPS)
@@ -334,6 +340,23 @@ void TryGenerateEnemy(std::vector<Enemy*>& emenies)
 	}
 }
 
+void UpdateBullets(std::vector<Bullet*>& bullets, const Player& player) {
+	// 径向波动速度
+	const double RADIAL_SPEED = 0.0045;
+	// 切向波动速度
+	const double TANGENT_SPEED = 0.0055;
+	// 子弹之间的弧度间隔
+	double radian_interval = 2 * 3.14159 / bullets.size();
+	POINT ploc = player.GetPosition();
+	double radius = 100 + 25 * sin(GetTickCount() * RADIAL_SPEED);
+	for (size_t i = 0; i < bullets.size(); i++) {
+		// 当前子弹所在的弧度值
+		double radian = GetTickCount() * TANGENT_SPEED + radian_interval * i;
+		bullets[i]->loc.x = ploc.x + player.PLAYER_WIDTH / 2 + (int)radius * sin(radian);
+		bullets[i]->loc.y = ploc.y + player.PLAYER_HEIGHT / 2 + (int)radius * cos(radian);
+	}
+}
+
 int main() {
 	initgraph(WINDOWS_WIDTH, WINDOWS_HEIGHT);
 	int screen_width = GetSystemMetrics(SM_CXSCREEN);
@@ -347,6 +370,11 @@ int main() {
 	IMAGE background_img;
 	Player player;
 	std::vector<Enemy*> enemies;
+	std::vector<Bullet*> bullets;
+	bullets.push_back(new Bullet());
+	bullets.push_back(new Bullet());
+	bullets.push_back(new Bullet());
+	bullets.push_back(new Bullet());
 
 	loadimage(&background_img, _T("img/background.png"));
 
@@ -364,6 +392,7 @@ int main() {
 		TryGenerateEnemy(enemies);
 		for (Enemy* enemy : enemies)
 			enemy->Move(player);
+		UpdateBullets(bullets, player);
 
 		for (Enemy* enemy : enemies) {
 			if (enemy->CheckPlayerCollision(player))
@@ -378,6 +407,12 @@ int main() {
 
 		putimage(0, 0, &background_img);
 
+		player.Draw(SLEEP_TIME);
+		for (Enemy* enemy : enemies)
+			enemy->Draw(SLEEP_TIME);
+		for (Bullet* b : bullets)
+			b->Draw();
+
 		DWORD end_time = GetTickCount();
 		DWORD delete_time = end_time - start_time;
 
@@ -385,15 +420,9 @@ int main() {
 		{
 			Sleep(SLEEP_TIME - delete_time);
 			DrawTipText(TARGET_FPS);
-			player.Draw(SLEEP_TIME);
-			for (Enemy* enemy : enemies)
-				enemy->Draw(SLEEP_TIME);
 		}
 		else {
 			DrawTipText(1000 / delete_time);
-			player.Draw(delete_time);
-			for (Enemy* enemy : enemies)
-				enemy->Draw(delete_time);
 		}
 		FlushBatchDraw();
 	}
