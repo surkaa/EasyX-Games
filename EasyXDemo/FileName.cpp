@@ -11,6 +11,10 @@ char current_piece = 'O';
 
 int gay = 4;
 
+int target_fps = 60;
+
+int sleep_time = 1000 / target_fps;
+
 /* 绘制棋盘 */
 void DrawBoard() {
 	line(200, 0, 200, 600);
@@ -38,9 +42,9 @@ void DrawPiece() {
 }
 
 // 绘制提示信息
-void DrawTipText() {
+void DrawTipText(const int fps) {
 	static TCHAR str[64];
-	_stprintf_s(str, _T("当前棋子类型为: %c"), current_piece);
+	_stprintf_s(str, _T("当前棋子类型为: %c fps: %d"), current_piece, fps);
 	settextcolor(RGB(225, 175, 45));
 	outtextxy(0, 0, str);
 }
@@ -91,6 +95,7 @@ int main() {
 
 	while (runing)
 	{
+		DWORD start_time = GetTickCount();
 		while (peekmessage(&msg))
 		{
 			if (msg.message == WM_LBUTTONDOWN)
@@ -114,7 +119,17 @@ int main() {
 		cleardevice();
 		DrawBoard();
 		DrawPiece();
-		DrawTipText();
+
+		DWORD end_time = GetTickCount();
+		DWORD delete_time = end_time - start_time;
+		if (delete_time < sleep_time)
+		{
+			Sleep(sleep_time - delete_time);
+			DrawTipText(60);
+		}
+		else {
+			DrawTipText(1000 / delete_time);
+		}
 		FlushBatchDraw();
 
 		if (CheckWin('X')) {
