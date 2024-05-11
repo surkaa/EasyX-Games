@@ -4,6 +4,9 @@
 
 #pragma comment(lib, "MSIMG32.LIB")
 
+// 窗口大小
+const int width = 1280;
+const int height = 720;
 // 目标帧率
 const int TARGET_FPS = 60;
 // 目标帧率下每帧应绘画的最大时间
@@ -16,7 +19,7 @@ const int PLAYER_AMIN_COUNT = 6;
 IMAGE img_player_left[PLAYER_AMIN_COUNT];
 IMAGE img_player_right[PLAYER_AMIN_COUNT];
 // 玩家位置
-POINT player_loc = { 640, 360 };
+POINT player_loc = { width / 2, height / 2 };
 // 玩家移动速度
 const int PLAYER_SPEED = 4;
 
@@ -60,7 +63,11 @@ void DrawTipText(const int fps) {
 }
 
 int main() {
-	initgraph(1280, 720);
+	initgraph(width, height);
+	int screen_width = GetSystemMetrics(SM_CXSCREEN);
+	int screen_height= GetSystemMetrics(SM_CYSCREEN);
+	
+	SetWindowPos(GetHWnd(), NULL, (screen_width - width) / 2, (screen_height - height) / 2, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 
 	bool runing = true;
 
