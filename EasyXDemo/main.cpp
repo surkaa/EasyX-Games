@@ -75,6 +75,11 @@ private:
 class Player
 {
 public:
+	// 玩家高度
+	const int PLAYER_WIDTH = 80;
+	// 玩家宽度
+	const int PLAYER_HEIGHT = 80;
+public:
 	Player() {
 		loadimage(&shadow_img, _T("img/shadow_player.png"));
 		anim_left = new Animation(_T("img/player_left_%d.png"), 6, 45);
@@ -172,10 +177,6 @@ public:
 private:
 	// 玩家移动速度
 	const int PLAYER_SPEED = 3;
-	// 玩家高度
-	const int PLAYER_WIDTH = 80;
-	// 玩家宽度
-	const int PLAYER_HEIGHT = 80;
 	// 阴影宽度
 	const int SHADOW_WIDTH = 32;
 private:
@@ -193,8 +194,6 @@ private:
 class Bullet
 {
 public:
-	POINT loc = { 0, 0 };
-public:
 	Bullet() = default;
 	~Bullet() = default;
 	void Draw() const
@@ -203,9 +202,14 @@ public:
 		setfillcolor(RGB(200, 75, 10));
 		fillcircle(loc.x, loc.y, RADIUS);
 	}
+	const POINT& GetPosition() const
+	{
+		return loc;
+	}
 
 private:
 	const int RADIUS = 10;
+	POINT loc = { 0, 0 };
 };
 
 class Enemy
@@ -252,11 +256,18 @@ public:
 	}
 	bool CheckBulletCollision(const Bullet& bullet)
 	{
-		return false;
+		const POINT& b = bullet.GetPosition();
+		return b.x >= loc.x && b.x <= loc.x + FRAME_WIDTH && b.y >= loc.y && b.y <= loc.y + FRAME_HEIGHT;
 	}
 	bool CheckPlayerCollision(const Player& player)
 	{
-		return false;
+		const POINT& ploc = player.GetPosition();
+		POINT check_loc = {
+			loc.x + FRAME_WIDTH / 2,
+			loc.y + FRAME_HEIGHT / 2,
+		};
+		return check_loc.x >= ploc.x && check_loc.x <= ploc.x + player.PLAYER_WIDTH
+			&& check_loc.y >= ploc.y && check_loc.y <= ploc.y + player.PLAYER_HEIGHT;
 	}
 	void Move(const Player& player)
 	{
@@ -334,7 +345,7 @@ int main() {
 
 	ExMessage msg;
 	IMAGE background_img;
-	Player* player = new Player();
+	Player player;
 	std::vector<Enemy*> enemies;
 
 	loadimage(&background_img, _T("img/background.png"));
@@ -346,13 +357,22 @@ int main() {
 		DWORD start_time = GetTickCount();
 		while (peekmessage(&msg))
 		{
-			player->ProcessEvent(msg, runing);
+			player.ProcessEvent(msg, runing);
 		}
 
-		player->Move();
+		player.Move();
 		TryGenerateEnemy(enemies);
 		for (Enemy* enemy : enemies)
-			enemy->Move(*player);
+			enemy->Move(player);
+
+		for (Enemy* enemy : enemies) {
+			if (enemy->CheckPlayerCollision(player))
+			{
+				MessageBox(GetHWnd(), _T("你的脑子被吃了!"), _T("游戏失败"), MB_OK);
+				runing = false;
+				break;
+			}
+		}
 
 		cleardevice();
 
@@ -365,13 +385,13 @@ int main() {
 		{
 			Sleep(SLEEP_TIME - delete_time);
 			DrawTipText(TARGET_FPS);
-			player->Draw(SLEEP_TIME);
+			player.Draw(SLEEP_TIME);
 			for (Enemy* enemy : enemies)
 				enemy->Draw(SLEEP_TIME);
 		}
 		else {
 			DrawTipText(1000 / delete_time);
-			player->Draw(delete_time);
+			player.Draw(delete_time);
 			for (Enemy* enemy : enemies)
 				enemy->Draw(delete_time);
 		}
