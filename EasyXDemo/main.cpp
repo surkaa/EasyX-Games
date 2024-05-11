@@ -12,16 +12,6 @@ const int height = 720;
 const int TARGET_FPS = 60;
 // 目标帧率下每帧应绘画的最大时间
 const int SLEEP_TIME = 1000 / TARGET_FPS;
-// 玩家位置
-POINT player_loc = { width / 2, height / 2 };
-// 玩家移动速度
-const int PLAYER_SPEED = 8;
-// 玩家高度
-const int PLAYER_WIDTH = 80;
-// 玩家宽度
-const int PLAYER_HEIGHT = 80;
-// 阴影宽度
-const int SHADOW_WIDTH = 32;
 
 inline void putimage_alpha(int x, int y, IMAGE* img) {
 	int w = img->getwidth();
@@ -82,32 +72,120 @@ private:
 	std::vector<IMAGE*> frame_list;
 };
 
-Animation anim_player_left(_T("img/player_left_%d.png"), 6, 45);
-Animation anim_player_right(_T("img/player_right_%d.png"), 6, 45);
-
-void DrawPlayer(int delta, int dx, IMAGE* shadow)
+class Player
 {
-	int loc_shadow_x = player_loc.x + (PLAYER_WIDTH - SHADOW_WIDTH) / 2;
-	int loc_shadow_y = player_loc.y + PLAYER_HEIGHT - 12;
-	putimage_alpha(loc_shadow_x, loc_shadow_y, shadow);
-
-	static bool is_facing_left = false;
-	if (dx < 0)
+public:
+	Player() {
+		loadimage(&shadow_img, _T("img/shadow_player.png"));
+		anim_left = new Animation(_T("img/player_left_%d.png"), 6, 45);
+		anim_right = new Animation(_T("img/player_right_%d.png"), 6, 45);
+	}
+	~Player() {
+		delete anim_left;
+		delete anim_right;
+	}
+	// 处理事件
+	void ProcessEvent(const ExMessage& msg, bool& runing) {
+		switch (msg.message)
+		{
+		case WM_KEYDOWN:
+			switch (msg.vkcode)
+			{
+			case VK_UP:
+				is_move_up = true;
+				break;
+			case VK_DOWN:
+				is_move_down = true;
+				break;
+			case VK_LEFT:
+				is_move_left = true;
+				break;
+			case VK_RIGHT:
+				is_move_right = true;
+				break;
+			}
+			break;
+		case WM_KEYUP:
+			switch (msg.vkcode)
+			{
+			case VK_UP:
+				is_move_up = false;
+				break;
+			case VK_DOWN:
+				is_move_down = false;
+				break;
+			case VK_LEFT:
+				is_move_left = false;
+				break;
+			case VK_RIGHT:
+				is_move_right = false;
+				break;
+			case VK_ESCAPE:
+				runing = false;
+				break;
+			}
+			break;
+		}
+	}
+	// 处理移动
+	void Move() {
+		int dx = is_move_right - is_move_left;
+		int dy = is_move_down - is_move_up;
+		// 移动向量的模
+		double len = sqrt(dx * dx + dy * dy);
+		if (len != 0)
+		{
+			// 向量分量乘以移动速度为分量上的移动距离
+			player_loc.x += (int)((dx / len) * PLAYER_SPEED);
+			player_loc.y += (int)((dy / len) * PLAYER_SPEED);
+		}
+	}
+	// 处理绘画
+	void Draw(int delta)
 	{
-		is_facing_left = true;
-	}
-	else if (dx > 0)
-	{
-		is_facing_left = false;
+		int loc_shadow_x = player_loc.x + (PLAYER_WIDTH - SHADOW_WIDTH) / 2;
+		int loc_shadow_y = player_loc.y + PLAYER_HEIGHT - 12;
+		putimage_alpha(loc_shadow_x, loc_shadow_y, &shadow_img);
+
+		static bool is_facing_left = false;
+		int dx = is_move_right - is_move_left;
+		if (dx < 0)
+		{
+			is_facing_left = true;
+		}
+		else if (dx > 0)
+		{
+			is_facing_left = false;
+		}
+
+		if (is_facing_left) {
+			anim_left->play(player_loc, delta);
+		}
+		else {
+			anim_right->play(player_loc, delta);
+		}
 	}
 
-	if (is_facing_left) {
-		anim_player_left.play(player_loc, delta);
-	}
-	else {
-		anim_player_right.play(player_loc, delta);
-	}
-}
+private:
+	// 玩家移动速度
+	const int PLAYER_SPEED = 3;
+	// 玩家高度
+	const int PLAYER_WIDTH = 80;
+	// 玩家宽度
+	const int PLAYER_HEIGHT = 80;
+	// 阴影宽度
+	const int SHADOW_WIDTH = 32;
+private:
+	IMAGE shadow_img;
+	Animation* anim_left;
+	Animation* anim_right;
+	bool is_move_up = false;
+	bool is_move_down = false;
+	bool is_move_left = false;
+	bool is_move_right = false;
+	// 玩家位置
+	POINT player_loc = { width / 2, height / 2 };
+};
 
 // 绘制提示信息(FPS)
 void DrawTipText(const int fps) {
@@ -128,14 +206,9 @@ int main() {
 
 	ExMessage msg;
 	IMAGE background_img;
-	IMAGE shadow_img;
-	bool is_move_up = false;
-	bool is_move_down = false;
-	bool is_move_left = false;
-	bool is_move_right = false;
+	Player* player = new Player();
 
 	loadimage(&background_img, _T("img/background.png"));
-	loadimage(&shadow_img, _T("img/shadow_player.png"));
 
 	BeginBatchDraw();
 
@@ -144,60 +217,14 @@ int main() {
 		DWORD start_time = GetTickCount();
 		while (peekmessage(&msg))
 		{
-			if (msg.message == WM_KEYDOWN)
-			{
-				switch (msg.vkcode)
-				{
-				case VK_UP:
-					is_move_up = true;
-					break;
-				case VK_DOWN:
-					is_move_down= true;
-					break;
-				case VK_LEFT:
-					is_move_left= true;
-					break;
-				case VK_RIGHT:
-					is_move_right= true;
-					break;
-				}
-			}
-			else if (msg.message == WM_KEYUP) {
-				switch (msg.vkcode)
-				{
-				case VK_UP:
-					is_move_up = false;
-					break;
-				case VK_DOWN:
-					is_move_down = false;
-					break;
-				case VK_LEFT:
-					is_move_left = false;
-					break;
-				case VK_RIGHT:
-					is_move_right = false;
-					break;
-				case VK_ESCAPE:
-					runing = false;
-					break;
-				}
-			}
+			player->ProcessEvent(msg, runing);
 		}
 
 		cleardevice();
 
 		putimage(0, 0, &background_img);
-		int dx = is_move_right - is_move_left;
-		int dy = is_move_down - is_move_up;
-		// 移动向量的模
-		double len = sqrt(dx * dx + dy * dy);
-		if (len != 0)
-		{
-			// 向量分量乘以移动速度为分量上的移动距离
-			player_loc.x += (int)((dx / len) * PLAYER_SPEED);
-			player_loc.y += (int)((dy / len) * PLAYER_SPEED);
-		}
-		DrawPlayer(SLEEP_TIME, dx, &shadow_img);
+		player->Move();
+		player->Draw(SLEEP_TIME);
 
 		DWORD end_time = GetTickCount();
 		DWORD delete_time = end_time - start_time;
