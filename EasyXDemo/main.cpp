@@ -187,6 +187,56 @@ private:
 	POINT player_loc = { WINDOWS_WIDTH / 2, WINDOWS_HEIGHT / 2 };
 };
 
+class Bullet
+{
+public:
+	POINT loc = { 0, 0 };
+public:
+	Bullet() = default;
+	~Bullet() = default;
+	void Draw() const
+	{
+		setlinecolor(RGB(255, 155, 50));
+		setfillcolor(RGB(200, 75, 10));
+		fillcircle(loc.x, loc.y, RADIUS);
+	}
+
+private:
+	const int RADIUS = 10;
+};
+
+class Enemy
+{
+public:
+	Enemy() {
+		loadimage(&img_shadow, _T("img/shadow_enemy.png"));
+		anim_left = new Animation(_T("img/enemy_left_%d.png"), 6, 45);
+		anim_right = new Animation(_T("img/enemy_right_%d.png"), 6, 45);
+
+	}
+	~Enemy() {
+		delete anim_left;
+		delete anim_right;
+	}
+	void Draw()
+	{}
+
+private:
+	// 敌人移速
+	const int SPEED = 2;
+	// 敌人宽度
+	const int FRAME_WIDTH = 80;
+	// 敌人高度
+	const int FRAME_HEIGHT = 80;
+	// 阴影宽度
+	const int SHADOW_WIDTH = 48;
+	IMAGE img_shadow;
+	Animation* anim_left;
+	Animation* anim_right;
+	POINT loc = { 0, 0 };
+	bool facing_left = false;
+};
+
 // 绘制提示信息(FPS)
 void DrawTipText(const int fps) {
 	static TCHAR str[64];
