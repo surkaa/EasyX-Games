@@ -5,9 +5,9 @@
 #pragma comment(lib, "MSIMG32.LIB")
 
 // 目标帧率
-int target_fps = 60;
+const int TARGET_FPS = 60;
 // 目标帧率下每帧应绘画的最大时间
-int sleep_time = 1000 / target_fps;
+const int SLEEP_TIME = 1000 / TARGET_FPS;
 // 当前关键帧动画的索引
 int index_current_amin = 0;
 // 关键帧动画的总数
@@ -15,6 +15,10 @@ const int PLAYER_AMIN_COUNT = 6;
 // 玩家关键帧图片
 IMAGE img_player_left[PLAYER_AMIN_COUNT];
 IMAGE img_player_right[PLAYER_AMIN_COUNT];
+// 玩家位置
+POINT player_loc = { 640, 360 };
+// 玩家移动速度
+const int PLAYER_SPEED = 2;
 
 inline void putimage_alpha(int x, int y, IMAGE* img) {
 	int w = img->getwidth();
@@ -73,8 +77,26 @@ int main() {
 		DWORD start_time = GetTickCount();
 		while (peekmessage(&msg))
 		{
-			if (msg.message == WM_LBUTTONDOWN)
+			if (msg.message == WM_KEYDOWN)
 			{
+				switch (msg.vkcode)
+				{
+				case VK_UP:
+					player_loc.y -= PLAYER_SPEED;
+					break;
+				case VK_DOWN:
+					player_loc.y += PLAYER_SPEED;
+					break;
+				case VK_LEFT:
+					player_loc.x -= PLAYER_SPEED;
+					break;
+				case VK_RIGHT:
+					player_loc.x += PLAYER_SPEED;
+					break;
+				case VK_ESCAPE:
+					runing = false;
+					break;
+				}
 			}
 		}
 
@@ -89,14 +111,14 @@ int main() {
 		cleardevice();
 
 		putimage(0, 0, &background_img);
-		putimage_alpha(500, 500, &img_player_left[index_current_amin]);
+		putimage_alpha(player_loc.x, player_loc.y, &img_player_left[index_current_amin]);
 
 		DWORD end_time = GetTickCount();
 		DWORD delete_time = end_time - start_time;
-		if (delete_time < sleep_time)
+		if (delete_time < SLEEP_TIME)
 		{
-			Sleep(sleep_time - delete_time);
-			DrawTipText(target_fps);
+			Sleep(SLEEP_TIME - delete_time);
+			DrawTipText(TARGET_FPS);
 		}
 		else {
 			DrawTipText(1000 / delete_time);
