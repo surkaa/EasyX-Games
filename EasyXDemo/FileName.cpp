@@ -125,7 +125,7 @@ int main() {
 		if (delete_time < sleep_time)
 		{
 			Sleep(sleep_time - delete_time);
-			DrawTipText(60);
+			DrawTipText(target_fps);
 		}
 		else {
 			DrawTipText(1000 / delete_time);
