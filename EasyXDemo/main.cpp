@@ -402,6 +402,21 @@ int main() {
 				break;
 			}
 		}
+		for (Enemy* e : enemies)
+			for (const Bullet* b : bullets)
+				if (e->CheckBulletCollision(*b))
+					e->Hurt();
+		// 移出死亡的敌人
+		for (size_t i = 0; i < enemies.size(); i++)
+		{
+			Enemy* e = enemies[i];
+			if (!e->CheckAlive())
+			{
+				std::swap(enemies[i], enemies.back());
+				enemies.pop_back();
+				delete e;
+			}
+		}
 
 		cleardevice();
 
@@ -409,7 +424,8 @@ int main() {
 
 		player.Draw(SLEEP_TIME);
 		for (Enemy* enemy : enemies)
-			enemy->Draw(SLEEP_TIME);
+			if (enemy->CheckAlive())
+				enemy->Draw(SLEEP_TIME);
 		for (Bullet* b : bullets)
 			b->Draw();
 
