@@ -219,19 +219,20 @@ int main() {
 		cleardevice();
 
 		putimage(0, 0, &background_img);
+		int dx = is_move_right - is_move_left;
+		int dy = is_move_down - is_move_up;
+		// 移动向量的模
+		double len = sqrt(dx * dx + dy * dy);
+		if (len != 0)
+		{
+			// 向量分量乘以移动速度为分量上的移动距离
+			player_loc.x += (int)((dx / len) * PLAYER_SPEED);
+			player_loc.y += (int)((dy / len) * PLAYER_SPEED);
+		}
+		DrawPlayer(SLEEP_TIME, dx, &shadow_img);
 
 		DWORD end_time = GetTickCount();
 		DWORD delete_time = end_time - start_time;
-		int dx = 0;
-		if (is_move_left)
-		{
-			dx = -PLAYER_SPEED;
-		}
-		if (is_move_right)
-		{
-			dx = PLAYER_SPEED;
-		}
-		DrawPlayer(SLEEP_TIME, is_move_right - is_move_left, &shadow_img);
 
 		if (delete_time < SLEEP_TIME)
 		{
