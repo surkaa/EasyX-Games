@@ -18,7 +18,7 @@ IMAGE img_player_right[PLAYER_AMIN_COUNT];
 // 玩家位置
 POINT player_loc = { 640, 360 };
 // 玩家移动速度
-const int PLAYER_SPEED = 2;
+const int PLAYER_SPEED = 4;
 
 inline void putimage_alpha(int x, int y, IMAGE* img) {
 	int w = img->getwidth();
@@ -66,6 +66,10 @@ int main() {
 
 	ExMessage msg;
 	IMAGE background_img;
+	bool is_move_up = false;
+	bool is_move_down = false;
+	bool is_move_left = false;
+	bool is_move_right = false;
 
 	LoadAnimation();
 	loadimage(&background_img, _T("img/background.png"));
@@ -82,22 +86,59 @@ int main() {
 				switch (msg.vkcode)
 				{
 				case VK_UP:
-					player_loc.y -= PLAYER_SPEED;
+					is_move_up = true;
 					break;
 				case VK_DOWN:
-					player_loc.y += PLAYER_SPEED;
+					is_move_down= true;
 					break;
 				case VK_LEFT:
-					player_loc.x -= PLAYER_SPEED;
+					is_move_left= true;
 					break;
 				case VK_RIGHT:
-					player_loc.x += PLAYER_SPEED;
+					is_move_right= true;
+					break;
+				}
+			}
+			else if (msg.message == WM_KEYUP) {
+				switch (msg.vkcode)
+				{
+				case VK_UP:
+					is_move_up = false;
+					break;
+				case VK_DOWN:
+					is_move_down = false;
+					break;
+				case VK_LEFT:
+					is_move_left = false;
+					break;
+				case VK_RIGHT:
+					is_move_right = false;
 					break;
 				case VK_ESCAPE:
 					runing = false;
 					break;
 				}
 			}
+		}
+
+		if (is_move_up)
+		{
+			player_loc.y -= PLAYER_SPEED;
+		}
+
+		if (is_move_down)
+		{
+			player_loc.y += PLAYER_SPEED;
+		}
+
+		if (is_move_left)
+		{
+			player_loc.x -= PLAYER_SPEED;
+		}
+
+		if (is_move_right)
+		{
+			player_loc.x += PLAYER_SPEED;
 		}
 
 		static int counter = 0;
