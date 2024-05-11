@@ -12,17 +12,10 @@ const int height = 720;
 const int TARGET_FPS = 60;
 // 目标帧率下每帧应绘画的最大时间
 const int SLEEP_TIME = 1000 / TARGET_FPS;
-// 当前关键帧动画的索引
-int index_current_amin = 0;
-// 关键帧动画的总数
-const int PLAYER_AMIN_COUNT = 6;
-// 玩家关键帧图片
-IMAGE img_player_left[PLAYER_AMIN_COUNT];
-IMAGE img_player_right[PLAYER_AMIN_COUNT];
 // 玩家位置
 POINT player_loc = { width / 2, height / 2 };
 // 玩家移动速度
-const int PLAYER_SPEED = 4;
+const int PLAYER_SPEED = 8;
 // 玩家高度
 const int PLAYER_WIDTH = 80;
 // 玩家宽度
@@ -190,31 +183,6 @@ int main() {
 				}
 			}
 		}
-
-		if (is_move_up)
-		{
-			player_loc.y -= PLAYER_SPEED;
-		}
-		if (is_move_down)
-		{
-			player_loc.y += PLAYER_SPEED;
-		}
-		if (is_move_left)
-		{
-			player_loc.x -= PLAYER_SPEED;
-		}
-		if (is_move_right)
-		{
-			player_loc.x += PLAYER_SPEED;
-		}
-
-		static int counter = 0;
-		if (++counter % 5 == 0) {
-			index_current_amin++;
-		}
-
-		// 每五帧刷新玩家关键帧
-		index_current_amin %= PLAYER_AMIN_COUNT;
 
 		cleardevice();
 
