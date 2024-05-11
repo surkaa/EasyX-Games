@@ -1,6 +1,7 @@
 ﻿#include<graphics.h>
 #include<iostream>
 #include<string>
+#include<vector>
 
 #pragma comment(lib, "MSIMG32.LIB")
 
@@ -22,6 +23,12 @@ IMAGE img_player_right[PLAYER_AMIN_COUNT];
 POINT player_loc = { width / 2, height / 2 };
 // 玩家移动速度
 const int PLAYER_SPEED = 4;
+// 玩家高度
+const int PLAYER_WIDTH = 80;
+// 玩家宽度
+const int PLAYER_HEIGHT = 80;
+// 阴影宽度
+const int SHADOW_WIDTH = 32;
 
 inline void putimage_alpha(int x, int y, IMAGE* img) {
 	int w = img->getwidth();
@@ -37,20 +44,75 @@ inline void putimage_alpha(int x, int y, IMAGE* img) {
 		0,
 		w,
 		h,
-		{AC_SRC_OVER, 0, 255, AC_SRC_ALPHA}
+		{ AC_SRC_OVER, 0, 255, AC_SRC_ALPHA }
 	);
 }
 
-void LoadAnimation() {
-	for (size_t i = 0; i < PLAYER_AMIN_COUNT; i++)
+class Animation
+{
+public:
+	Animation(LPCTSTR path, int num, int interval)
 	{
-		std::wstring path = L"img/player_left_" + std::to_wstring(i) + L".png";
-		loadimage(&img_player_left[i], path.c_str());
+		this->interval_ms = interval;
+		this->timer = 0;
+		TCHAR path_file[256];
+		for (size_t i = 0; i < num; i++)
+		{
+			_stprintf_s(path_file, path, i);
+			IMAGE* frame = new IMAGE();
+			loadimage(frame, path_file);
+			this->frame_list.push_back(frame);
+		}
 	}
-	for (size_t i = 0; i < PLAYER_AMIN_COUNT; i++)
+	~Animation()
 	{
-		std::wstring path = L"img/player_right_" + std::to_wstring(i) + L".png";
-		loadimage(&img_player_right[i], path.c_str());
+		for (size_t i = 0; i < this->frame_list.size(); i++)
+		{
+			delete this->frame_list[i];
+		}
+	}
+
+	void play(POINT loc, int delta)
+	{
+		this->timer += delta;
+		if (this->timer > this->interval_ms)
+		{
+			this->index_frame = (this->index_frame + 1) % this->frame_list.size();
+			this->timer = 0;
+		}
+		putimage_alpha(loc.x, loc.y, this->frame_list[this->index_frame]);
+	}
+private:
+	int timer = 0;
+	int index_frame = 0;
+	int interval_ms = 0;
+	std::vector<IMAGE*> frame_list;
+};
+
+Animation anim_player_left(_T("img/player_left_%d.png"), 6, 45);
+Animation anim_player_right(_T("img/player_right_%d.png"), 6, 45);
+
+void DrawPlayer(int delta, int dx, IMAGE* shadow)
+{
+	int loc_shadow_x = player_loc.x + (PLAYER_WIDTH - SHADOW_WIDTH) / 2;
+	int loc_shadow_y = player_loc.y + PLAYER_HEIGHT - 12;
+	putimage_alpha(loc_shadow_x, loc_shadow_y, shadow);
+
+	static bool is_facing_left = false;
+	if (dx < 0)
+	{
+		is_facing_left = true;
+	}
+	else if (dx > 0)
+	{
+		is_facing_left = false;
+	}
+
+	if (is_facing_left) {
+		anim_player_left.play(player_loc, delta);
+	}
+	else {
+		anim_player_right.play(player_loc, delta);
 	}
 }
 
@@ -73,13 +135,14 @@ int main() {
 
 	ExMessage msg;
 	IMAGE background_img;
+	IMAGE shadow_img;
 	bool is_move_up = false;
 	bool is_move_down = false;
 	bool is_move_left = false;
 	bool is_move_right = false;
 
-	LoadAnimation();
 	loadimage(&background_img, _T("img/background.png"));
+	loadimage(&shadow_img, _T("img/shadow_player.png"));
 
 	BeginBatchDraw();
 
@@ -132,17 +195,14 @@ int main() {
 		{
 			player_loc.y -= PLAYER_SPEED;
 		}
-
 		if (is_move_down)
 		{
 			player_loc.y += PLAYER_SPEED;
 		}
-
 		if (is_move_left)
 		{
 			player_loc.x -= PLAYER_SPEED;
 		}
-
 		if (is_move_right)
 		{
 			player_loc.x += PLAYER_SPEED;
@@ -159,10 +219,20 @@ int main() {
 		cleardevice();
 
 		putimage(0, 0, &background_img);
-		putimage_alpha(player_loc.x, player_loc.y, &img_player_left[index_current_amin]);
 
 		DWORD end_time = GetTickCount();
 		DWORD delete_time = end_time - start_time;
+		int dx = 0;
+		if (is_move_left)
+		{
+			dx = -PLAYER_SPEED;
+		}
+		if (is_move_right)
+		{
+			dx = PLAYER_SPEED;
+		}
+		DrawPlayer(SLEEP_TIME, is_move_right - is_move_left, &shadow_img);
+
 		if (delete_time < SLEEP_TIME)
 		{
 			Sleep(SLEEP_TIME - delete_time);
