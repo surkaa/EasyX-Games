@@ -165,7 +165,10 @@ public:
 			anim_right->play(player_loc, delta);
 		}
 	}
-
+	const POINT& GetPosition() const
+	{
+		return player_loc;
+	}
 private:
 	// 玩家移动速度
 	const int PLAYER_SPEED = 3;
@@ -213,13 +216,75 @@ public:
 		anim_left = new Animation(_T("img/enemy_left_%d.png"), 6, 45);
 		anim_right = new Animation(_T("img/enemy_right_%d.png"), 6, 45);
 
+		// 敌人生成位置的枚举
+		enum SpawnEdge
+		{
+			Up = 0,
+			Down,
+			Left,
+			Right
+		};
+
+		SpawnEdge edge = (SpawnEdge)(rand() % 4);
+		switch (edge)
+		{
+		case SpawnEdge::Up:
+			loc.x = rand() % WINDOWS_WIDTH;
+			loc.y = -FRAME_WIDTH;
+			break;
+		case SpawnEdge::Down:
+			loc.x = rand() % WINDOWS_WIDTH;
+			loc.y = WINDOWS_HEIGHT;
+			break;
+		case SpawnEdge::Left:
+			loc.x = -FRAME_WIDTH;
+			loc.y = rand() % WINDOWS_HEIGHT;
+			break;
+		case SpawnEdge::Right:
+			loc.x = WINDOWS_WIDTH;
+			loc.y = rand() % WINDOWS_HEIGHT;
+			break;
+		}
 	}
 	~Enemy() {
 		delete anim_left;
 		delete anim_right;
 	}
-	void Draw()
-	{}
+	bool CheckBulletCollision(const Bullet& bullet)
+	{
+		return false;
+	}
+	bool CheckPlayerCollision(const Player& player)
+	{
+		return false;
+	}
+	void Move(const Player& player)
+	{
+		const POINT& player_loc = player.GetPosition();
+		int dx = player_loc.x - loc.x;
+		int dy = player_loc.y - loc.y;
+		// 移动向量的模
+		double len = sqrt(dx * dx + dy * dy);
+		if (len != 0)
+		{
+			// 向量分量乘以移动速度为分量上的移动距离
+			loc.x += (int)((dx / len) * SPEED);
+			loc.y += (int)((dy / len) * SPEED);
+		}
+	}
+	void Draw(int delta)
+	{
+		int loc_shadow_x = loc.x + (FRAME_WIDTH - SHADOW_WIDTH) / 2;
+		int loc_shadow_y = loc.y + FRAME_HEIGHT - 35; 
+		putimage_alpha(loc_shadow_x, loc_shadow_y, &img_shadow);
+
+		if (is_facing_left) {
+			anim_left->play(loc, delta);
+		}
+		else {
+			anim_right->play(loc, delta);
+		}
+	}
 
 private:
 	// 敌人移速
@@ -234,7 +299,9 @@ private:
 	Animation* anim_left;
 	Animation* anim_right;
 	POINT loc = { 0, 0 };
-	bool facing_left = false;
+	bool is_facing_left = false;
+	bool is_move_left = false;
+	bool is_move_right = false;
 };
 
 // 绘制提示信息(FPS)
@@ -243,6 +310,17 @@ void DrawTipText(const int fps) {
 	_stprintf_s(str, _T("FPS: %d"), fps);
 	settextcolor(RGB(225, 175, 45));
 	outtextxy(0, 0, str);
+}
+
+void TryGenerateEnemy(std::vector<Enemy*>& emenies)
+{
+	const int INTERVAL = 50;
+	static int counter = 0;
+	if ((++counter) % INTERVAL == 0)
+	{
+		emenies.push_back(new Enemy());
+		counter = 0;
+	}
 }
 
 int main() {
@@ -257,6 +335,7 @@ int main() {
 	ExMessage msg;
 	IMAGE background_img;
 	Player* player = new Player();
+	std::vector<Enemy*> enemies;
 
 	loadimage(&background_img, _T("img/background.png"));
 
@@ -270,11 +349,14 @@ int main() {
 			player->ProcessEvent(msg, runing);
 		}
 
+		player->Move();
+		TryGenerateEnemy(enemies);
+		for (Enemy* enemy : enemies)
+			enemy->Move(*player);
+
 		cleardevice();
 
 		putimage(0, 0, &background_img);
-		player->Move();
-		player->Draw(SLEEP_TIME);
 
 		DWORD end_time = GetTickCount();
 		DWORD delete_time = end_time - start_time;
@@ -283,9 +365,15 @@ int main() {
 		{
 			Sleep(SLEEP_TIME - delete_time);
 			DrawTipText(TARGET_FPS);
+			player->Draw(SLEEP_TIME);
+			for (Enemy* enemy : enemies)
+				enemy->Draw(SLEEP_TIME);
 		}
 		else {
 			DrawTipText(1000 / delete_time);
+			player->Draw(delete_time);
+			for (Enemy* enemy : enemies)
+				enemy->Draw(delete_time);
 		}
 		FlushBatchDraw();
 	}
