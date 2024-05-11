@@ -6,8 +6,8 @@
 #pragma comment(lib, "MSIMG32.LIB")
 
 // 窗口大小
-const int width = 1280;
-const int height = 720;
+const int WINDOWS_WIDTH = 1280;
+const int WINDOWS_HEIGHT = 720;
 // 目标帧率
 const int TARGET_FPS = 60;
 // 目标帧率下每帧应绘画的最大时间
@@ -184,7 +184,7 @@ private:
 	bool is_move_left = false;
 	bool is_move_right = false;
 	// 玩家位置
-	POINT player_loc = { width / 2, height / 2 };
+	POINT player_loc = { WINDOWS_WIDTH / 2, WINDOWS_HEIGHT / 2 };
 };
 
 // 绘制提示信息(FPS)
@@ -196,11 +196,11 @@ void DrawTipText(const int fps) {
 }
 
 int main() {
-	initgraph(width, height);
+	initgraph(WINDOWS_WIDTH, WINDOWS_HEIGHT);
 	int screen_width = GetSystemMetrics(SM_CXSCREEN);
 	int screen_height= GetSystemMetrics(SM_CYSCREEN);
 	
-	SetWindowPos(GetHWnd(), NULL, (screen_width - width) / 2, (screen_height - height) / 2, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+	SetWindowPos(GetHWnd(), NULL, (screen_width - WINDOWS_WIDTH) / 2, (screen_height - WINDOWS_HEIGHT) / 2, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 
 	bool runing = true;
 
