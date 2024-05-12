@@ -4,6 +4,7 @@
 #include<vector>
 #define PI 3.14159265358979323846
 
+#pragma comment(lib, "Winmm.lib")
 #pragma comment(lib, "MSIMG32.LIB")
 
 // 窗口大小
@@ -193,7 +194,7 @@ public:
 	}
 private:
 	// 玩家移动速度
-	const int PLAYER_SPEED = 30;
+	const int PLAYER_SPEED = 6;
 	// 阴影宽度
 	const int SHADOW_WIDTH = 32;
 private:
@@ -379,14 +380,22 @@ void UpdateBullets(std::vector<Bullet*>& bullets, const Player& player) {
 		bullets[i]->loc.y = ploc.y + player.PLAYER_HEIGHT / 2 + (int)radius * cos(radian);
 	}
 }
-
+ 
 int main() {
 	initgraph(WINDOWS_WIDTH, WINDOWS_HEIGHT);
+
+	// 设置随机数
 	srand((unsigned int)time(NULL));
+
+	// 居中
 	int screen_width = GetSystemMetrics(SM_CXSCREEN);
 	int screen_height= GetSystemMetrics(SM_CYSCREEN);
-	
 	SetWindowPos(GetHWnd(), NULL, (screen_width - WINDOWS_WIDTH) / 2, (screen_height - WINDOWS_HEIGHT) / 2, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+
+	// 播放bgm
+	mciSendString(_T("open mus/bgm.mp3 alias bgm"), NULL, 0, NULL);
+	mciSendString(_T("open mus/hit.wav alias hit"), NULL, 0, NULL);
+	mciSendString(_T("play bgm repeat from 0"), NULL, 0, NULL);
 
 	bool runing = true;
 
@@ -429,7 +438,10 @@ int main() {
 		for (Enemy* e : enemies)
 			for (const Bullet* b : bullets)
 				if (e->CheckBulletCollision(*b))
+				{
 					e->Hurt();
+					mciSendString(_T("play hit from 0"), NULL, 0, NULL);
+				}
 		// 移出死亡的敌人
 		for (size_t i = 0; i < enemies.size(); i++)
 		{
