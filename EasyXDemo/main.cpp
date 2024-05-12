@@ -14,7 +14,7 @@ const int WINDOWS_HEIGHT = 720;
 const int BUTTON_WIDTH = 192;
 const int BUTTON_HEIGHT = 75;
 // 目标帧率
-const int TARGET_FPS = 144;
+const int TARGET_FPS = 60;
 // 目标帧率下每帧应绘画的最大时间
 const int SLEEP_TIME = 1000 / TARGET_FPS;
 
@@ -495,7 +495,7 @@ void UpdateBullets(std::vector<Bullet*>& bullets, const Player& player) {
 	// 切向波动速度
 	const double TANGENT_SPEED = 0.0055;
 	// 子弹之间的弧度间隔
-	double radian_interval = 2 * 3.14159 / bullets.size();
+	double radian_interval = 2 * PI / bullets.size();
 	POINT ploc = player.GetPosition();
 	double radius = 100 + 25 * sin(GetTickCount() * RADIAL_SPEED);
 	for (size_t i = 0; i < bullets.size(); i++) {
@@ -506,7 +506,7 @@ void UpdateBullets(std::vector<Bullet*>& bullets, const Player& player) {
 	}
 }
  
-int main() {
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	initgraph(WINDOWS_WIDTH, WINDOWS_HEIGHT);
 
 	// 游戏是否已经开始
