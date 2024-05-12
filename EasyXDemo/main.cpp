@@ -33,45 +33,59 @@ inline void putimage_alpha(int x, int y, IMAGE* img) {
 	);
 }
 
-class Animation
+class Atlas
 {
 public:
-	Animation(LPCTSTR path, int num, int interval)
+	Atlas(LPCTSTR path, int num)
 	{
-		this->interval_ms = interval;
-		this->timer = 0;
 		TCHAR path_file[256];
 		for (size_t i = 0; i < num; i++)
 		{
 			_stprintf_s(path_file, path, i);
+
 			IMAGE* frame = new IMAGE();
 			loadimage(frame, path_file);
-			this->frame_list.push_back(frame);
+			frame_list.push_back(frame);
 		}
 	}
-	~Animation()
+	~Atlas()
 	{
-		for (size_t i = 0; i < this->frame_list.size(); i++)
-		{
-			delete this->frame_list[i];
-		}
+		for (size_t i = 0; i < frame_list.size(); i++)
+			delete frame_list[i];
 	}
+public:std::vector<IMAGE*> frame_list;
+};
+
+Atlas* atlas_player_left;
+Atlas* atlas_player_right;
+Atlas* atlas_enemy_left;
+Atlas* atlas_enemy_right;
+
+class Animation
+{
+public:
+	Animation(Atlas* atlas, int interval)
+	{
+		this->anim_atlas = atlas;
+		this->interval_ms = interval;
+	}
+	~Animation() = default;
 
 	void play(POINT loc, int delta)
 	{
 		this->timer += delta;
 		if (this->timer > this->interval_ms)
 		{
-			this->index_frame = (this->index_frame + 1) % this->frame_list.size();
+			this->index_frame = (this->index_frame + 1) % this->anim_atlas->frame_list.size();
 			this->timer = 0;
 		}
-		putimage_alpha(loc.x, loc.y, this->frame_list[this->index_frame]);
+		putimage_alpha(loc.x, loc.y, this->anim_atlas->frame_list[this->index_frame]);
 	}
 private:
 	int timer = 0;
 	int index_frame = 0;
 	int interval_ms = 0;
-	std::vector<IMAGE*> frame_list;
+	Atlas* anim_atlas;
 };
 
 class Player
@@ -86,8 +100,8 @@ public:
 public:
 	Player() {
 		loadimage(&shadow_img, _T("img/shadow_player.png"));
-		anim_left = new Animation(_T("img/player_left_%d.png"), 6, 45);
-		anim_right = new Animation(_T("img/player_right_%d.png"), 6, 45);
+		anim_left = new Animation(atlas_player_left, 45);
+		anim_right = new Animation(atlas_player_right, 45);
 	}
 	~Player() {
 		delete anim_left;
@@ -234,8 +248,8 @@ class Enemy
 public:
 	Enemy() {
 		loadimage(&img_shadow, _T("img/shadow_enemy.png"));
-		anim_left = new Animation(_T("img/enemy_left_%d.png"), 6, 45);
-		anim_right = new Animation(_T("img/enemy_right_%d.png"), 6, 45);
+		anim_left = new Animation(atlas_enemy_left, 45);
+		anim_right = new Animation(atlas_enemy_right, 45);
 
 		// 敌人生成位置的枚举
 		enum SpawnEdge
@@ -386,6 +400,12 @@ void UpdateBullets(std::vector<Bullet*>& bullets, const Player& player) {
 int main() {
 	initgraph(WINDOWS_WIDTH, WINDOWS_HEIGHT);
 
+	// 加载统一的资源
+	atlas_player_left = new Atlas(_T("img/player_left_%d.png"), 6);
+	atlas_player_right = new Atlas(_T("img/player_right_%d.png"), 6);
+	atlas_enemy_left = new Atlas(_T("img/enemy_left_%d.png"), 6);
+	atlas_enemy_right= new Atlas(_T("img/enemy_right_%d.png"), 6);
+
 	// 设置随机数
 	srand((unsigned int)time(NULL));
 
@@ -483,5 +503,11 @@ int main() {
 	}
 
 	EndBatchDraw();
+
+	delete atlas_player_left;
+	delete atlas_player_right;
+	delete atlas_enemy_right;
+	delete atlas_enemy_left;
+
 	return 0;
 }
