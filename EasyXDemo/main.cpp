@@ -14,7 +14,7 @@ const int WINDOWS_HEIGHT = 720;
 const int BUTTON_WIDTH = 192;
 const int BUTTON_HEIGHT = 75;
 // 目标帧率
-const int TARGET_FPS = 60;
+const int TARGET_FPS = 144;
 // 目标帧率下每帧应绘画的最大时间
 const int SLEEP_TIME = 1000 / TARGET_FPS;
 
@@ -213,7 +213,7 @@ public:
 	}
 private:
 	// 玩家移动速度
-	const int PLAYER_SPEED = 6;
+	const int PLAYER_SPEED = 4;
 	// 阴影宽度
 	const int SHADOW_WIDTH = 32;
 private:
@@ -473,8 +473,9 @@ private:
 void DrawTipText(const int fps, const int score) {
 	static TCHAR str[64];
 	_stprintf_s(str, _T("得分: %d 帧率: %d"), score, fps);
+	setbkmode(TRANSPARENT);
 	settextcolor(RGB(225, 175, 45));
-	outtextxy(0, 0, str);
+	outtextxy(10, 10, str);
 }
 
 void TryGenerateEnemy(std::vector<Enemy*>& emenies)
@@ -536,8 +537,6 @@ int main() {
 	Player player;
 	std::vector<Enemy*> enemies;
 	std::vector<Bullet*> bullets;
-	bullets.push_back(new Bullet());
-	bullets.push_back(new Bullet());
 	bullets.push_back(new Bullet());
 	bullets.push_back(new Bullet());
 
