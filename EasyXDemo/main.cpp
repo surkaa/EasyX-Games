@@ -81,6 +81,8 @@ public:
 	const int PLAYER_WIDTH = 80;
 	// 玩家宽度
 	const int PLAYER_HEIGHT = 80;
+	// 得分
+	int score = 0;
 public:
 	Player() {
 		loadimage(&shadow_img, _T("img/shadow_player.png"));
@@ -346,9 +348,9 @@ private:
 };
 
 // 绘制提示信息(FPS)
-void DrawTipText(const int fps) {
+void DrawTipText(const int fps, const int score) {
 	static TCHAR str[64];
-	_stprintf_s(str, _T("FPS: %d"), fps);
+	_stprintf_s(str, _T("得分: %d 帧率: %d"), score, fps);
 	settextcolor(RGB(225, 175, 45));
 	outtextxy(0, 0, str);
 }
@@ -441,6 +443,7 @@ int main() {
 				{
 					e->Hurt();
 					mciSendString(_T("play hit from 0"), NULL, 0, NULL);
+					player.score++;
 				}
 		// 移出死亡的敌人
 		for (size_t i = 0; i < enemies.size(); i++)
@@ -471,10 +474,10 @@ int main() {
 		if (delete_time < SLEEP_TIME)
 		{
 			Sleep(SLEEP_TIME - delete_time);
-			DrawTipText(TARGET_FPS);
+			DrawTipText(TARGET_FPS, player.score);
 		}
 		else {
-			DrawTipText(1000 / delete_time);
+			DrawTipText(1000 / delete_time, player.score);
 		}
 		FlushBatchDraw();
 	}
