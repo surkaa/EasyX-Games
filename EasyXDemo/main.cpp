@@ -144,6 +144,22 @@ public:
 			// 向量分量乘以移动速度为分量上的移动距离
 			player_loc.x += (int)((dx / len) * PLAYER_SPEED);
 			player_loc.y += (int)((dy / len) * PLAYER_SPEED);
+			if (player_loc.x > WINDOWS_WIDTH - PLAYER_WIDTH)
+			{
+				player_loc.x = WINDOWS_WIDTH - PLAYER_WIDTH;
+			}
+			if (player_loc.x < 0)
+			{
+				player_loc.x = 0;
+			}
+			if (player_loc.y < 0)
+			{
+				player_loc.y = 0;
+			}
+			if (player_loc.y > WINDOWS_HEIGHT - PLAYER_HEIGHT)
+			{
+				player_loc.y = WINDOWS_HEIGHT - PLAYER_HEIGHT;
+			}
 		}
 	}
 	// 处理绘画
@@ -177,7 +193,7 @@ public:
 	}
 private:
 	// 玩家移动速度
-	const int PLAYER_SPEED = 3;
+	const int PLAYER_SPEED = 30;
 	// 阴影宽度
 	const int SHADOW_WIDTH = 32;
 private:
@@ -271,6 +287,13 @@ public:
 	{
 		const POINT& player_loc = player.GetPosition();
 		int dx = player_loc.x - loc.x;
+		if (dx > 0)
+		{
+			is_facing_left = false;
+		}
+		else if (dx < 0) {
+			is_facing_left = true;
+		}
 		int dy = player_loc.y - loc.y;
 		// 移动向量的模
 		double len = sqrt(dx * dx + dy * dy);
@@ -359,6 +382,7 @@ void UpdateBullets(std::vector<Bullet*>& bullets, const Player& player) {
 
 int main() {
 	initgraph(WINDOWS_WIDTH, WINDOWS_HEIGHT);
+	srand((unsigned int)time(NULL));
 	int screen_width = GetSystemMetrics(SM_CXSCREEN);
 	int screen_height= GetSystemMetrics(SM_CYSCREEN);
 	
