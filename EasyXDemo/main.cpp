@@ -317,6 +317,7 @@ public:
 	}
 	void Move(const Player& player)
 	{
+		// TODO 敌人有时候会突然停止
 		const POINT& player_loc = player.GetPosition();
 		int dx = player_loc.x - loc.x;
 		if (dx > 0)
@@ -488,6 +489,24 @@ void DrawTipText(const int fps, const int score, const int interval) {
 	setbkmode(TRANSPARENT);
 	settextcolor(RGB(225, 175, 45));
 	outtextxy(10, 10, str);
+}
+
+void DrawHelpText() {
+	static TCHAR str[128];
+	_stprintf_s(str, _T("游戏帮助:\n1. 你需要控制角色不被敌人吃掉你的脑子\n2. 控制角色上下左右分别对应wsad按键或者方向键\n3. 空格可以暂停/恢复游戏"));
+	setbkmode(TRANSPARENT);
+	settextcolor(RGB(225, 175, 45));
+	// 分割字符串
+	TCHAR* next_line;
+	TCHAR* token = _tcstok_s(str, _T("\n"), &next_line);
+	int y = 10; // 初始Y坐标
+
+	// 逐行输出
+	while (token != NULL) {
+		outtextxy(10, y, token);
+		y += textheight(token) + 5; // 5是行间距
+		token = _tcstok_s(NULL, _T("\n"), &next_line);
+	}
 }
 
 void TryGenerateEnemy(std::vector<Enemy*>& emenies, int interval)
@@ -673,6 +692,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			putimage(0, 0, &img_menu);
 			btn_start_game.Draw();
 			btn_quit_game.Draw();
+			DrawHelpText();
 		}
 		FlushBatchDraw();
 	}
