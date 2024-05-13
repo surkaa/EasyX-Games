@@ -111,22 +111,26 @@ public:
 		delete anim_right;
 	}
 	// 处理事件
-	void ProcessEvent(const ExMessage& msg, bool& runing) {
+	void ProcessEvent(const ExMessage& msg, bool& runing, bool& is_puase) {
 		switch (msg.message)
 		{
 		case WM_KEYDOWN:
 			switch (msg.vkcode)
 			{
 			case VK_UP:
+			case 0x57:
 				is_move_up = true;
 				break;
 			case VK_DOWN:
+			case 0x53:
 				is_move_down = true;
 				break;
 			case VK_LEFT:
+			case 0x41:
 				is_move_left = true;
 				break;
 			case VK_RIGHT:
+			case 0x44:
 				is_move_right = true;
 				break;
 			}
@@ -135,19 +139,26 @@ public:
 			switch (msg.vkcode)
 			{
 			case VK_UP:
+			case 0x57:
 				is_move_up = false;
 				break;
 			case VK_DOWN:
+			case 0x53:
 				is_move_down = false;
 				break;
 			case VK_LEFT:
+			case 0x41:
 				is_move_left = false;
 				break;
 			case VK_RIGHT:
+			case 0x44:
 				is_move_right = false;
 				break;
 			case VK_ESCAPE:
 				runing = false;
+				break;
+			case VK_SPACE:
+				is_puase = !is_puase;
 				break;
 			}
 			break;
@@ -511,6 +522,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	// 游戏是否已经开始
 	bool igs = false;
+	bool is_puase = false;
 	bool runing = true;
 
 	// 加载统一的资源
@@ -537,7 +549,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	Player player;
 	std::vector<Enemy*> enemies;
 	std::vector<Bullet*> bullets;
-	bullets.push_back(new Bullet());
 	bullets.push_back(new Bullet());
 	bullets.push_back(new Bullet());
 
@@ -580,13 +591,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		{
 			if (igs)
 			{
-				player.ProcessEvent(msg, runing);
+				player.ProcessEvent(msg, runing, is_puase);
 			}
 			else
 			{
 				btn_start_game.ProcessEvent(msg);
 				btn_quit_game.ProcessEvent(msg);
 			}
+		}
+		if (is_puase)
+		{
+			continue;
 		}
 
 		int interval = 25 * (pow(1.01, -player.score) + 1);
