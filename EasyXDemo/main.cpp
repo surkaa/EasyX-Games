@@ -224,7 +224,7 @@ public:
 	}
 private:
 	// 玩家移动速度
-	const int PLAYER_SPEED = 4;
+	const int PLAYER_SPEED = 5;
 	// 阴影宽度
 	const int SHADOW_WIDTH = 32;
 private:
@@ -265,6 +265,8 @@ public:
 		anim_left = new Animation(atlas_enemy_left, 45);
 		anim_right = new Animation(atlas_enemy_right, 45);
 		speed = rand() % 3 + 1;
+		boold = rand() % 15 + 10;
+		score = (boold + speed) / 10;
 
 		// 敌人生成位置的枚举
 		enum SpawnEdge
@@ -349,14 +351,27 @@ public:
 		else {
 			anim_right->play(loc, delta);
 		}
+		static TCHAR str[4];
+		_stprintf_s(str, _T("%d"), this->boold);
+		setbkmode(TRANSPARENT);
+		settextcolor(RGB(255, 83, 83));
+		outtextxy(loc.x + 5, loc.y, str);
 	}
 	void Hurt()
 	{
-		alive = false;
+		boold--;
+		if (boold < 0)
+		{
+			boold = 0;
+		}
 	}
-	bool CheckAlive()
+	int GetBoold()
 	{
-		return alive;
+		return boold;
+	}
+	int GetScore()
+	{
+		return score;
 	}
 private:
 	// 敌人宽度
@@ -372,7 +387,8 @@ private:
 	bool is_facing_left = false;
 	bool is_move_left = false;
 	bool is_move_right = false;
-	bool alive = true;
+	int boold;
+	int score;
 	// 敌人移速
 	int speed;
 };
@@ -570,6 +586,7 @@ int MyMain() {
 	std::vector<Bullet*> bullets;
 	bullets.push_back(new Bullet());
 	bullets.push_back(new Bullet());
+	bullets.push_back(new Bullet());
 
 	RECT region_btn_start_game, region_btn_quit_game;
 
@@ -647,14 +664,50 @@ int MyMain() {
 					{
 						e->Hurt();
 						mciSendString(_T("play hit from 0"), NULL, 0, NULL);
-						player.score++;
 					}
 			// 移出死亡的敌人
 			for (size_t i = 0; i < enemies.size(); i++)
 			{
 				Enemy* e = enemies[i];
-				if (!e->CheckAlive())
+				if (e->GetBoold() == 0)
 				{
+					player.score += e->GetScore();
+					static bool s3 = false;
+					static bool s10 = false;
+					static bool s20 = false;
+					static bool s50 = false;
+					static bool s100 = false;
+					static bool s200 = false;
+					if (player.score > 3 && !s3)
+					{
+						bullets.push_back(new Bullet());
+						s3 = true;
+					}
+					else if (player.score > 10 && !s10)
+					{
+						bullets.push_back(new Bullet());
+						s10 = true;
+					}
+					else if (player.score > 20 && !s20)
+					{
+						bullets.push_back(new Bullet());
+						s20 = true;
+					}
+					else if (player.score > 50 && !s50)
+					{
+						bullets.push_back(new Bullet());
+						s50 = true;
+					}
+					else if (player.score > 100 && !s100)
+					{
+						bullets.push_back(new Bullet());
+						s100 = true;
+					}
+					else if (player.score > 200 && !s200)
+					{
+						bullets.push_back(new Bullet());
+						s200 = true;
+					}
 					std::swap(enemies[i], enemies.back());
 					enemies.pop_back();
 					delete e;
@@ -670,7 +723,7 @@ int MyMain() {
 
 			player.Draw(SLEEP_TIME);
 			for (Enemy* enemy : enemies)
-				if (enemy->CheckAlive())
+				if (enemy->GetBoold() > 0)
 					enemy->Draw(SLEEP_TIME);
 			for (Bullet* b : bullets)
 				b->Draw();
@@ -699,7 +752,6 @@ int MyMain() {
 					fps_timeer = 0;
 				}
 			}
-			printf("%d\n", fps);
 			DrawTipText(fps, player.score, interval);
 		}
 		else
@@ -722,10 +774,10 @@ int MyMain() {
 	return 0;
 }
 
-//int main() {
-//	return MyMain();
-//}
-
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int main() {
 	return MyMain();
 }
+
+//int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+//	return MyMain();
+//}
