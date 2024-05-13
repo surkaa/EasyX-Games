@@ -314,8 +314,8 @@ public:
 			loc.x + FRAME_WIDTH / 2,
 			loc.y + FRAME_HEIGHT / 2,
 		};
-		return check_loc.x >= ploc.x && check_loc.x <= ploc.x + player.PLAYER_WIDTH
-			&& check_loc.y >= ploc.y && check_loc.y <= ploc.y + player.PLAYER_HEIGHT;
+		return check_loc.x >= (ploc.x + player.PLAYER_WIDTH / 8) && check_loc.x <= ploc.x + 7 * player.PLAYER_WIDTH / 8
+			&& check_loc.y >= (ploc.y + player.PLAYER_HEIGHT / 8) && check_loc.y <= ploc.y + 7 * player.PLAYER_HEIGHT / 8;
 	}
 	void Move(const Player& player)
 	{
@@ -501,7 +501,7 @@ private:
 // 绘制提示信息(FPS)
 void DrawTipText(const int fps, const int score, const int interval) {
 	static TCHAR str[64];
-	_stprintf_s(str, _T("得分: %d 帧率: %d(每%d帧生成一个敌人)"), score, fps, interval);
+	_stprintf_s(str, _T("得分: %d 帧率: %d 敌人生成速度: %d"), score, fps, interval);
 	setbkmode(TRANSPARENT);
 	settextcolor(RGB(225, 175, 45));
 	outtextxy(10, 10, str);
@@ -509,7 +509,7 @@ void DrawTipText(const int fps, const int score, const int interval) {
 
 void DrawHelpText() {
 	static TCHAR str[128];
-	_stprintf_s(str, _T("游戏帮助:\n1. 你需要控制角色不被敌人吃掉你的脑子\n2. 控制角色上下左右分别对应wsad按键或者方向键\n3. 空格可以暂停/恢复游戏"));
+	_stprintf_s(str, _T("游戏帮助:\n1. 你需要控制角色不被敌人吃掉你的脑子\n2. 控制角色上下左右分别对应wsad按键或者方向键\n3. 空格可以暂停/恢复游戏\n制作者: 杨伟宁"));
 	setbkmode(TRANSPARENT);
 	settextcolor(RGB(225, 175, 45));
 	// 分割字符串
