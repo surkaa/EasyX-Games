@@ -253,6 +253,7 @@ public:
 		loadimage(&img_shadow, _T("img/shadow_enemy.png"));
 		anim_left = new Animation(atlas_enemy_left, 45);
 		anim_right = new Animation(atlas_enemy_right, 45);
+		speed = rand() % 3 + 1;
 
 		// 敌人生成位置的枚举
 		enum SpawnEdge
@@ -290,8 +291,8 @@ public:
 	}
 	bool CheckBulletCollision(const Bullet& b)
 	{
-		return b.loc.x >= loc.x && b.loc.x <= loc.x + FRAME_WIDTH 
-			&& b.loc.y >= loc.y && b.loc.y <= loc.y + FRAME_HEIGHT;
+		return b.loc.x >= loc.x + (FRAME_WIDTH / 8) && b.loc.x <= loc.x + 7 * (FRAME_WIDTH / 8)
+			&& b.loc.y >= loc.y + (FRAME_HEIGHT / 8) && b.loc.y <= loc.y + 7 * (FRAME_HEIGHT / 8);
 	}
 	bool CheckPlayerCollision(const Player& player)
 	{
@@ -320,8 +321,8 @@ public:
 		if (len != 0)
 		{
 			// 向量分量乘以移动速度为分量上的移动距离
-			loc.x += (int)((dx / len) * SPEED);
-			loc.y += (int)((dy / len) * SPEED);
+			loc.x += (int)((dx / len) * speed);
+			loc.y += (int)((dy / len) * speed);
 		}
 	}
 	void Draw(int delta)
@@ -346,8 +347,6 @@ public:
 		return alive;
 	}
 private:
-	// 敌人移速
-	const int SPEED = 2;
 	// 敌人宽度
 	const int FRAME_WIDTH = 80;
 	// 敌人高度
@@ -362,6 +361,8 @@ private:
 	bool is_move_left = false;
 	bool is_move_right = false;
 	bool alive = true;
+	// 敌人移速
+	int speed;
 };
 
 class Button
@@ -470,19 +471,18 @@ private:
 };
 
 // 绘制提示信息(FPS)
-void DrawTipText(const int fps, const int score) {
+void DrawTipText(const int fps, const int score, const int interval) {
 	static TCHAR str[64];
-	_stprintf_s(str, _T("得分: %d 帧率: %d"), score, fps);
+	_stprintf_s(str, _T("得分: %d 帧率: %d(每%d帧生成一个敌人)"), score, fps, interval);
 	setbkmode(TRANSPARENT);
 	settextcolor(RGB(225, 175, 45));
 	outtextxy(10, 10, str);
 }
 
-void TryGenerateEnemy(std::vector<Enemy*>& emenies)
+void TryGenerateEnemy(std::vector<Enemy*>& emenies, int interval)
 {
-	const int INTERVAL = 50;
 	static int counter = 0;
-	if ((++counter) % INTERVAL == 0)
+	if ((++counter) % interval == 0)
 	{
 		emenies.push_back(new Enemy());
 		counter = 0;
@@ -539,6 +539,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	std::vector<Bullet*> bullets;
 	bullets.push_back(new Bullet());
 	bullets.push_back(new Bullet());
+	bullets.push_back(new Bullet());
 
 	RECT region_btn_start_game, region_btn_quit_game;
 
@@ -588,10 +589,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			}
 		}
 
+		int interval = 25 * (pow(1.01, -player.score) + 1);
+
 		if (igs)
 		{
 			player.Move();
-			TryGenerateEnemy(enemies);
+			TryGenerateEnemy(enemies, interval);
 			for (Enemy* enemy : enemies)
 				enemy->Move(player);
 			UpdateBullets(bullets, player);
@@ -644,10 +647,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			if (delete_time < SLEEP_TIME)
 			{
 				Sleep(SLEEP_TIME - delete_time);
-				DrawTipText(TARGET_FPS, player.score);
+				DrawTipText(TARGET_FPS, player.score, interval);
 			}
 			else {
-				DrawTipText(1000 / delete_time, player.score);
+				DrawTipText(1000 / delete_time, player.score, interval);
 			}
 		}
 		else
