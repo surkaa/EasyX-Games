@@ -84,7 +84,7 @@ bool CheckDraw() {
 	return true;
 }
 
-int main() {
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	initgraph(600, 600);
 
 	bool runing = true;
