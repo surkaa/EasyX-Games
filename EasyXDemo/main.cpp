@@ -535,8 +535,8 @@ void UpdateBullets(std::vector<Bullet*>& bullets, const Player& player) {
 		bullets[i]->loc.y = ploc.y + player.PLAYER_HEIGHT / 2 + (int)radius * cos(radian);
 	}
 }
- 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+
+int MyMain() {
 	initgraph(WINDOWS_WIDTH, WINDOWS_HEIGHT);
 
 	// 游戏是否已经开始
@@ -548,14 +548,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	atlas_player_left = new Atlas(_T("img/player_left_%d.png"), 6);
 	atlas_player_right = new Atlas(_T("img/player_right_%d.png"), 6);
 	atlas_enemy_left = new Atlas(_T("img/enemy_left_%d.png"), 6);
-	atlas_enemy_right= new Atlas(_T("img/enemy_right_%d.png"), 6);
+	atlas_enemy_right = new Atlas(_T("img/enemy_right_%d.png"), 6);
 
 	// 设置随机数
 	srand((unsigned int)time(NULL));
 
 	// 居中
 	int screen_width = GetSystemMetrics(SM_CXSCREEN);
-	int screen_height= GetSystemMetrics(SM_CYSCREEN);
+	int screen_height = GetSystemMetrics(SM_CYSCREEN);
 	SetWindowPos(GetHWnd(), NULL, (screen_width - WINDOWS_WIDTH) / 2, (screen_height - WINDOWS_HEIGHT) / 2, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 
 	// 播放bgm
@@ -623,7 +623,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			continue;
 		}
 
-		int interval = 25 * (pow(1.01, -player.score) + 1);
+		int interval = 10 * (pow(1.01, -player.score) * 5 + 1);
 
 		if (igs)
 		{
@@ -678,14 +678,29 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			DWORD end_time = GetTickCount();
 			DWORD delete_time = end_time - start_time;
 
+			static int fps_timeer = 0;
+			static int fps = TARGET_FPS;
+
 			if (delete_time < SLEEP_TIME)
 			{
 				Sleep(SLEEP_TIME - delete_time);
-				DrawTipText(TARGET_FPS, player.score, interval);
+				fps_timeer += SLEEP_TIME;
+				if (fps_timeer > 800)
+				{
+					fps = TARGET_FPS;
+					fps_timeer = 0;
+				}
 			}
 			else {
-				DrawTipText(1000 / delete_time, player.score, interval);
+				fps_timeer += delete_time;
+				if (fps_timeer > 800)
+				{
+					fps = 1000 / delete_time;
+					fps_timeer = 0;
+				}
 			}
+			printf("%d\n", fps);
+			DrawTipText(fps, player.score, interval);
 		}
 		else
 		{
@@ -705,4 +720,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	delete atlas_enemy_left;
 
 	return 0;
+}
+
+//int main() {
+//	return MyMain();
+//}
+
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+	return MyMain();
 }
